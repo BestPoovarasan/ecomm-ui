@@ -1,0 +1,11 @@
+.navimg{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    object-fit:contain;
+    margin-top: 10px;
+    height: 100vh;
+    width: 100%;
+    
+}
