@@ -1,33 +1,41 @@
-import React, { useState } from "react";
 import "./login.css";
-import { Link } from "react-router-dom";
 import {
-  MDBTabs,
-  MDBTabsItem,
-  MDBTabsLink,
-  MDBTabsContent,
-  MDBTabsPane,
+  MDBSpinner,
   MDBRow,
   MDBCol,
   MDBInput,
   MDBCheckbox,
   MDBBtn,
-  MDBIcon,
   MDBContainer,
 } from "mdb-react-ui-kit";
+import Navbar from "../navbar/Navbar";
 import { config } from "../../config";
 import axios from "axios";
-import { useFormik } from "formik";
-import { useNavigate } from "react-router-dom";
+import { useFormik, } from "formik";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
+
+// <----------formik validate---------->
+const validate = (values) => {
+  const errors = {};
+ 
+  if (!values.password) {
+    errors.password = "Required";
+  } else if (values.password.length <= 5) {
+    errors.password = "please enter your password";
+  }
+
+  if (!values.email) {
+    errors.email = "";
+  } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.email)) {
+    errors.email = "Invalid Email address";
+  }
+  return errors;
+};
 export default function Login() {
-  const [basicActive, setBasicActive] = useState("tab1");
-  const handleBasicClick = (value) => {
-    if (value === basicActive) {
-      return;
-    }
-    setBasicActive(value);
-  };
+  const [loading, setloading] = useState(false);
+
   // Login Process------------------------->
   const navigate = useNavigate();
   const log = useFormik({
@@ -35,27 +43,14 @@ export default function Login() {
       email: "",
       password: "",
     },
+    validate,
     onSubmit: async (values) => {
       try {
+        setloading(true);
         const login = await axios.post(`${config.api}/login`, values);
         localStorage.setItem("react_app_token", login.data.token);
         navigate("/dashboard");
-      } catch (error) {
-        console.log(error);
-      }
-    },
-  });
-  // Register Process------------------------------------------->
-  const reg = useFormik({
-    initialValues: {
-      username: "",
-      email: "",
-      password: "",
-    },
-    onSubmit: async (values) => {
-      try {
-        const register = await axios.post(`${config.api}/register`, values);
-        alert(register.data.message);
+        setloading(false);
       } catch (error) {
         console.log(error);
       }
@@ -64,36 +59,10 @@ export default function Login() {
 
   return (
     <>
-    <MDBContainer className="loge">
-      <MDBTabs
-        pills
-        className="mb-3 d-flex justify-content-center align-items-center"
-      >
-        <MDBTabsItem>
-          <MDBTabsLink
-            onClick={() => handleBasicClick("tab1")}
-            active={basicActive === "tab1"}
-          >
-            Login
-          </MDBTabsLink>
-        </MDBTabsItem>
-        <Link to="/">
-            <MDBIcon fas icon="home" />
-          </Link>
-        <MDBTabsItem>
-          <MDBTabsLink
-            onClick={() => handleBasicClick("tab2")}
-            active={basicActive === "tab2"}
-          >
-            Register
-          </MDBTabsLink>
-        </MDBTabsItem>
-      </MDBTabs>
-
-      <MDBTabsContent className="d-flex justify-content-center align-items-center">
-        <MDBTabsPane show={basicActive === "tab1"}>
-          {/* form tags Login */}
-          <form onSubmit={log.handleSubmit}>
+      <Navbar />
+      <MDBContainer className="loge">
+        <h2 className="p-5">Login</h2>
+        <form onSubmit={log.handleSubmit}>
           <div className="form-outline mb-4">
             <MDBInput
               type="email"
@@ -102,8 +71,8 @@ export default function Login() {
               onChange={log.handleChange}
               value={log.values.email}
             />
-            </div>
-            <div className="form-outline mb-4">
+          </div>
+          <div className="form-outline mb-4">
             <MDBInput
               type="password"
               label="Password"
@@ -112,84 +81,33 @@ export default function Login() {
               value={log.values.password}
             />
           </div>
-
-            <MDBRow className="mb-4">
-              <MDBCol className="d-flex justify-content-center">
-                <MDBCheckbox
-                  id="form7Example3"
-                  label="Remember me"
-                  defaultChecked
-                />
-              </MDBCol>
-             
-            </MDBRow>
-
-            <MDBBtn type="submit" className="mb-4" block>
+          <MDBRow className="mb-4">
+            <MDBCol className="d-flex justify-content-center">
+              <MDBCheckbox
+                id="form7Example3"
+                label="Remember me"
+                defaultChecked
+              />
+            </MDBCol>
+          </MDBRow>
+          {loading ? (
+            <MDBBtn disabled block className="text-center">
+              <MDBSpinner size="sm" role="status" tag="span" className="me-2" />
+              Loading...
+            </MDBBtn>
+          ) : (
+            <MDBBtn type="submit" className="mb-4" block disabled={!log.isValid}>
               Sign in
             </MDBBtn>
+          )}
 
-            <div className="text-center">
-              <p>
-                Not a member?{" "}
-                <MDBTabsLink
-                  className="registerlink"
-                  onClick={() => handleBasicClick("tab2")}
-                  active={basicActive === "tab2"}
-                >
-                  Register
-                </MDBTabsLink>
-                
-              </p>
-            </div>
-          </form>
-          {/* register tab 2  */}
-        </MDBTabsPane>
-        <MDBTabsPane show={basicActive === "tab2"}>
-          <form onSubmit={reg.handleSubmit}>
-          <div className="form-outline mb-4">
-          <MDBInput
-              type="text"
-              label="Username"
-              Name="username"
-              onChange={reg.handleChange}
-              value={reg.values.username}
-            />
-            </div>
-            <div className="form-outline mb-4">
-
-            <MDBInput
-              type="email"
-              Name="email"
-              label="Email address"
-              onChange={reg.handleChange}
-              value={reg.values.email}
-            />
-            </div>
-            <div className="form-outline mb-4">
-
-            <MDBInput
-              type="password"
-              label="Password"
-              Name="password"
-              onChange={reg.handleChange}
-              value={reg.values.password}
-              />
-              </div>
-
-            <MDBCheckbox
-              wrapperClass="d-flex justify-content-center mb-4"
-              id="form8Example6"
-              label="I have read and agree to the terms"
-              defaultChecked
-            />
-
-            <MDBBtn type="submit" className="mb-4" block>
-              Register
-            </MDBBtn>
-          </form>
-        </MDBTabsPane>
-      </MDBTabsContent>
-       </MDBContainer>
+          <div className="text-center">
+            <p>
+              Not a member? <Link to="/register">Register</Link>
+            </p>
+          </div>
+        </form>
+      </MDBContainer>
     </>
   );
 }
